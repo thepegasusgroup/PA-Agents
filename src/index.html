@@ -472,12 +472,25 @@
     <div class="tooltip-cost"></div>
   </div>
 
+  <!-- ═══════════════ TUTORIAL OVERLAY ═══════════════ -->
+  <div id="tutorialOverlay" class="tutorial-overlay hidden">
+    <div id="tutBackdrop" class="tutorial-backdrop"></div>
+    <div id="tutorialCard" class="tutorial-card modal">
+      <div class="tutorial-step-num" id="tutStepNum">1 / 12</div>
+      <div class="tutorial-icon" id="tutIcon">🦅</div>
+      <h2 class="tutorial-title" id="tutTitle"></h2>
+      <p class="tutorial-desc" id="tutDesc"></p>
+      <div class="tutorial-actions" id="tutActions"></div>
+    </div>
+  </div>
+
   <script src="js/textures.js"></script>
   <script src="js/state.js"></script>
   <script src="js/grid.js"></script>
   <script src="js/toolbar.js"></script>
   <script src="js/pipeline.js"></script>
   <script src="js/reports.js"></script>
+  <script src="js/tutorial.js"></script>
   <script src="js/renderer.js"></script>
 </body>
 </html>

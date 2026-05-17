@@ -31,6 +31,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   initHudUpdater();
   initAutoSave();
   initSaveLoadKeys();
+
+  // First run — no save data means new user, show tutorial
+  if (!saveData && typeof Tutorial !== 'undefined') {
+    Tutorial.start();
+  }
 });
 
 // ── Todo Panel (HITL review queue in-game) ──

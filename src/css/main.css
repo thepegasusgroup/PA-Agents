@@ -3120,3 +3120,184 @@ body {
   display: none;
 }
 
+/* ═══════════════ TUTORIAL OVERLAY ═══════════════ */
+
+.tutorial-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 100000;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+.tutorial-overlay.hidden { display: none; }
+.tutorial-overlay.fading { opacity: 0; }
+
+.tutorial-backdrop {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.88);
+  pointer-events: all;
+  transition: opacity 0.3s ease;
+}
+.tutorial-backdrop.hidden { opacity: 0; pointer-events: none; }
+
+/* ── Card ── */
+.tutorial-card {
+  pointer-events: all;
+  position: absolute;
+  width: 440px;
+  max-width: 90vw;
+  background: linear-gradient(170deg, rgba(25, 25, 50, 0.97), rgba(15, 15, 35, 0.98));
+  border: 1px solid rgba(232, 130, 26, 0.4);
+  border-radius: 12px;
+  padding: 32px 36px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(232, 130, 26, 0.08);
+  text-align: center;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, top 0.3s ease;
+}
+.tutorial-card.modal {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.tutorial-card.guide {
+  top: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.tutorial-card.success {
+  border-color: #5cb85c;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(92, 184, 92, 0.25);
+}
+
+/* ── Step counter ── */
+.tutorial-step-num {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 1px;
+}
+
+/* ── Icon ── */
+.tutorial-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+/* ── Title ── */
+.tutorial-title {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 10px 0;
+  letter-spacing: 0.5px;
+}
+
+/* ── Description ── */
+.tutorial-desc {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+  margin: 0 0 24px 0;
+}
+
+/* ── Actions ── */
+.tutorial-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── Primary button ── */
+.tutorial-btn {
+  background: linear-gradient(135deg, #e8821a, #d4701a);
+  color: #fff;
+  border: none;
+  padding: 12px 36px;
+  border-radius: 8px;
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  letter-spacing: 0.5px;
+}
+.tutorial-btn:hover { background: linear-gradient(135deg, #f09030, #e8821a); transform: scale(1.02); }
+.tutorial-btn:active { transform: scale(0.98); }
+.tutorial-btn:disabled { opacity: 0.6; cursor: wait; }
+
+/* ── Sign-in button ── */
+.tutorial-btn.signin {
+  background: #fff;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 28px;
+}
+.tutorial-btn.signin:hover { background: #f0f0f0; }
+
+.tut-google-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, #4285f4, #34a853, #fbbc05, #ea4335);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+/* ── Spinner ── */
+.tut-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.15);
+  border-top-color: #333;
+  border-radius: 50%;
+  animation: tut-spin 0.7s linear infinite;
+}
+@keyframes tut-spin { to { transform: rotate(360deg); } }
+
+/* ── Skip button ── */
+.tutorial-btn-skip {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 12px;
+  transition: color 0.2s;
+}
+.tutorial-btn-skip:hover { color: rgba(255, 255, 255, 0.6); }
+
+/* ── Hint text ── */
+.tutorial-hint {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  color: rgba(232, 130, 26, 0.6);
+  letter-spacing: 0.5px;
+}
+
+/* ── Highlight pulse on toolbar buttons ── */
+.tutorial-highlight {
+  position: relative;
+  z-index: 100001 !important;
+  animation: tut-pulse 1.5s ease-in-out infinite;
+}
+@keyframes tut-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 130, 26, 0.6); }
+  50% { box-shadow: 0 0 20px 6px rgba(232, 130, 26, 0.35); }
+}
+
