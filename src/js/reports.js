@@ -175,6 +175,7 @@ const Reports = {
       case 'agents': this._renderAgents(); break;
       case 'logs': this._renderLogs(); break;
       case 'system': this._renderSystem(); break;
+      case 'connections': this._renderConnections(); break;
       case 'radio': this._renderRadio(); break;
     }
   },
@@ -684,6 +685,85 @@ const Reports = {
       r.playing = true;
     }
     this._renderRadio();
+  },
+
+  // ── Connections App ──
+
+  async _renderConnections() {
+    this.titleEl.textContent = 'Connections';
+    const api = window.electronAPI?.gmail;
+
+    // Check Gmail auth status
+    let gmailAuthed = false;
+    let gmailEmail = '';
+    if (api) {
+      try {
+        gmailAuthed = await api.isAuthenticated();
+        if (gmailAuthed) {
+          const profile = await api.getProfile();
+          if (profile.success) gmailEmail = profile.data.email || '';
+        }
+      } catch (e) { /* silent */ }
+    }
+
+    let html = '<div class="conn-list">';
+
+    // ── Gmail ──
+    html += `<div class="conn-item">
+      <div class="conn-icon" style="background: linear-gradient(135deg, #dc4e41, #c0392b);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      </div>
+      <div class="conn-info">
+        <div class="conn-name">Gmail</div>`;
+
+    if (gmailAuthed) {
+      html += `<div class="conn-status connected">Connected</div>`;
+      if (gmailEmail) html += `<div class="conn-email">${this._esc(gmailEmail)}</div>`;
+      html += `</div><button class="conn-action disconnect" id="connGmailDisconnect">Disconnect</button>`;
+    } else {
+      html += `<div class="conn-status disconnected">Not connected</div>`;
+      html += `</div><button class="conn-action setup" id="connGmailSetup">Setup</button>`;
+    }
+
+    html += `</div>`;
+
+    // ── Future connections placeholder ──
+    html += `<div class="conn-coming-soon">More integrations coming soon</div>`;
+    html += '</div>';
+
+    this.content.innerHTML = html;
+
+    // Wire buttons
+    const setupBtn = document.getElementById('connGmailSetup');
+    if (setupBtn) {
+      setupBtn.addEventListener('click', async () => {
+        setupBtn.disabled = true;
+        setupBtn.textContent = 'Connecting...';
+        try {
+          const result = await api.startAuth();
+          if (result && !result.success) {
+            setupBtn.textContent = 'Not configured';
+            setupBtn.disabled = true;
+            return;
+          }
+          this._renderConnections();
+        } catch (e) {
+          setupBtn.textContent = 'Failed';
+          setTimeout(() => { setupBtn.textContent = 'Setup'; setupBtn.disabled = false; }, 2000);
+        }
+      });
+    }
+
+    const disconnectBtn = document.getElementById('connGmailDisconnect');
+    if (disconnectBtn) {
+      disconnectBtn.addEventListener('click', async () => {
+        try {
+          await api.logout();
+          this._emails = [];
+          this._renderConnections();
+        } catch (e) { /* silent */ }
+      });
+    }
   },
 
   _esc(str) {
