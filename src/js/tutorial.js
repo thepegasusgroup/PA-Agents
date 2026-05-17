@@ -290,7 +290,20 @@ const Tutorial = {
     btn.innerHTML = '<span class="tut-spinner"></span> Waiting for sign-in...';
 
     try {
-      await api.startAuth();
+      const result = await api.startAuth();
+
+      // startAuth returns { success, error } — check if Gmail isn't configured
+      if (result && !result.success) {
+        btn.textContent = 'Gmail not configured — skipping';
+        btn.disabled = true;
+        setTimeout(() => {
+          // Skip the "Gmail Connected" step too
+          this._step++;
+          this.advance();
+        }, 1500);
+        return;
+      }
+
       const authed = await api.isAuthenticated();
       if (authed) {
         this.advance();
