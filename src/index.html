@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PA Agents</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <!-- ═══════════════ TITLE BAR ═══════════════ -->
+  <div id="titleBar">
+    <span class="title-bar-name">Pegasus Agents</span>
+    <div class="title-bar-controls">
+      <button class="title-bar-btn" id="winMinimize">&minus;</button>
+      <button class="title-bar-btn" id="winMaximize">&#9744;</button>
+      <button class="title-bar-btn close" id="winClose">&times;</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MAIN AREA ═══════════════ -->
+  <div id="main-area">
+    <!-- GRID CANVAS -->
+    <canvas id="gridCanvas"></canvas>
+
+    <!-- Utility Underground View Indicator -->
+    <div class="utility-indicator" id="utilityIndicator">⚡ Underground View</div>
+
+    <!-- Crate Tooltip (delivery system) -->
+    <div id="crateTooltip" class="crate-tooltip hidden">
+      <span class="ct-label">Contains:</span>
+      <span class="ct-item"></span>
+    </div>
+
+    <!-- ═══════════════ TODO / REPORT (top-left) ═══════════════ -->
+    <div class="todo-container">
+      <div class="todo-top-row">
+        <!-- 1. Todo bar (lined paper) -->
+        <div class="todo-bar" id="todoBar">
+          <svg class="todo-bar-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="1" width="14" height="14" rx="1"/>
+            <path d="M4 4h8M4 7h8M4 10h5"/>
+          </svg>
+          <span class="todo-bar-text">Todo <span id="todoComplete">3</span>/<span id="todoTotal">5</span></span>
+        </div>
+        <!-- 2. Action icons (dark) -->
+        <div class="todo-actions">
+          <button class="todo-action-btn" title="Placeholder">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#aaa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="7" cy="7" r="5.5"/><line x1="7" y1="4.5" x2="7" y2="7.5"/><circle cx="7" cy="9.5" r="0.4" fill="#aaa"/>
+            </svg>
+          </button>
+          <button class="todo-action-btn" title="Placeholder">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#aaa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="7" cy="7" r="5.5"/><path d="M5 7h4M7 5v4"/>
+            </svg>
+          </button>
+          <button class="todo-action-btn" title="Placeholder">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#aaa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="3" cy="7" r="1"/><circle cx="7" cy="7" r="1"/><circle cx="11" cy="7" r="1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. Report panel (expandable, lined paper) -->
+      <div class="todo-report hidden" id="todoReport">
+        <div id="todoItems"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ TOP-CENTER SEGMENTS ═══════════════ -->
+    <div class="top-segments" id="topSegments">
+      <div class="top-seg" id="segActivity" title="Agent Activity Level">
+        <svg class="top-seg-icon" width="12" height="12" viewBox="0 0 14 14">
+          <path d="M7 1L13 12H1Z" fill="#F0AD4E" stroke="#000" stroke-width="0.5"/>
+          <text x="7" y="10.5" text-anchor="middle" fill="#000" font-size="8" font-weight="bold">!</text>
+        </svg>
+        <div class="activity-arrows" id="activityArrows">
+          <span class="arrow dim">&#9654;</span>
+          <span class="arrow dim">&#9654;</span>
+          <span class="arrow dim">&#9654;</span>
+          <span class="arrow dim">&#9654;</span>
+          <span class="arrow dim">&#9654;</span>
+        </div>
+      </div>
+      <div class="top-seg" id="segDay" title="Project Day">
+        <span class="top-seg-value">DAY <span id="dayCount">1</span></span>
+      </div>
+      <div class="top-seg" id="segBudget" title="Budget">
+        <svg class="top-seg-icon" width="14" height="10" viewBox="0 0 18 13">
+          <rect x="0.5" y="0.5" width="17" height="12" rx="1.5" fill="#2D6B2D" stroke="#4CAF50" stroke-width="0.8"/>
+          <circle cx="9" cy="6.5" r="3" fill="none" stroke="#4CAF50" stroke-width="0.7"/>
+          <text x="9" y="8.5" text-anchor="middle" fill="#4CAF50" font-size="6" font-weight="bold">$</text>
+        </svg>
+        <span class="top-seg-value budget" id="cashAmount">$0</span>
+      </div>
+      <div class="top-seg" id="segCashflow" title="24-Hour Cashflow">
+        <svg class="top-seg-icon" width="12" height="11" viewBox="0 0 16 14">
+          <polyline points="1,12 4,8 7,10 10,4 14,2" fill="none" stroke="#4CAF50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <polygon points="12,1 15,2 13,4" fill="#4CAF50"/>
+        </svg>
+        <span class="top-seg-value cashflow" id="cashflowValue">$0</span>
+      </div>
+      <div class="top-seg" id="segAgents" title="Active / Total Agents">
+        <svg class="top-seg-icon" width="12" height="12" viewBox="0 0 14 14">
+          <circle cx="7" cy="4.5" r="3" fill="none" stroke="#aaa" stroke-width="1"/>
+          <path d="M2 13c0-3 2.2-5.5 5-5.5s5 2.5 5 5.5" fill="none" stroke="#aaa" stroke-width="1"/>
+        </svg>
+        <span class="top-seg-value"><span id="agentsActive">0</span>/<span id="agentsTotal">0</span></span>
+      </div>
+      <div class="top-seg" id="segTasks" title="Running Tasks / Capacity">
+        <svg class="top-seg-icon" width="12" height="12" viewBox="0 0 14 14">
+          <rect x="1" y="1" width="12" height="3.5" rx="0.5" fill="none" stroke="#aaa" stroke-width="0.8"/>
+          <rect x="1" y="5.5" width="12" height="3.5" rx="0.5" fill="none" stroke="#aaa" stroke-width="0.8"/>
+          <rect x="1" y="10" width="12" height="3.5" rx="0.5" fill="none" stroke="#aaa" stroke-width="0.8"/>
+          <circle cx="3.5" cy="2.75" r="0.8" fill="#4CAF50"/><circle cx="3.5" cy="7.25" r="0.8" fill="#F0AD4E"/><circle cx="3.5" cy="11.75" r="0.8" fill="#666"/>
+        </svg>
+        <span class="top-seg-value"><span id="tasksRunning">0</span>/<span id="tasksCapacity">0</span></span>
+      </div>
+    </div>
+
+    <!-- ═══════════════ CLOCK & SPEED (top-right) ═══════════════ -->
+    <div class="clock-container">
+      <div class="clock-display" id="clockTime">07:00</div>
+      <div class="clock-period" id="clockPeriod">Morning</div>
+    </div>
+
+    <!-- SELECTION OVERLAY (shows when placing items) -->
+    <div id="placement-info" class="placement-info hidden">
+      <span class="placement-name">Concrete Wall</span>
+      <span class="placement-cost">$50</span>
+      <span class="placement-hint">Click and drag to place</span>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════ SUB-TOOLBAR ═══════════════ -->
+  <div id="subToolbar" class="sub-toolbar hidden">
+    <div class="sub-toolbar-items" id="subToolbarItems">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+
+  <!-- ═══════════════ BOTTOM TOOLBAR ═══════════════ -->
+  <footer id="toolbar">
+    <div class="toolbar-categories" id="toolbarCategories">
+      <!-- Group 1: Blue build tools -->
+      <div class="toolbar-group">
+        <button class="tool-btn blue" data-category="foundations">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9.5L10 3L17 9.5"/><path d="M5 8v9h10V8"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">Foundations</span>
+        </button>
+        <button class="tool-btn blue" data-category="materials">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="16" height="4"/><rect x="2" y="9" width="16" height="4"/><rect x="2" y="13" width="16" height="4" rx="0"/>
+              <line x1="10" y1="4" x2="10" y2="8"/><line x1="6" y1="9" x2="6" y2="13"/><line x1="14" y1="9" x2="14" y2="13"/><line x1="10" y1="13" x2="10" y2="17"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">Walls</span>
+        </button>
+        <button class="tool-btn blue" data-category="flooring">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="16" height="16"/><line x1="2" y1="10" x2="18" y2="10"/><line x1="10" y1="2" x2="10" y2="10"/><line x1="6" y1="10" x2="6" y2="18"/><line x1="14" y1="10" x2="14" y2="18"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">Flooring</span>
+        </button>
+        <button class="tool-btn blue" data-category="rooms">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="16" height="16"/><line x1="10" y1="2" x2="10" y2="12"/><line x1="2" y1="12" x2="18" y2="12"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">Rooms</span>
+        </button>
+        <button class="tool-btn blue" data-category="objects">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="14" height="10" rx="1"/><line x1="10" y1="13" x2="10" y2="16"/><line x1="6" y1="16" x2="14" y2="16"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">Objects</span>
+        </button>
+        <button class="tool-btn blue" data-category="staff">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="10" cy="6" r="3"/><path d="M4 18c0-4 2.7-7 6-7s6 3 6 7"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">Staff</span>
+        </button>
+        <button class="tool-btn blue" data-category="utilities">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="10" cy="10" r="3"/><path d="M10 2v3M10 15v3M2 10h3M15 10h3M4.2 4.2l2.1 2.1M13.7 13.7l2.1 2.1M4.2 15.8l2.1-2.1M13.7 6.3l2.1-2.1"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">Utilities</span>
+        </button>
+        <button class="tool-btn blue" data-category="deployment">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 15V3M10 3L6 7M10 3l4 4"/><line x1="3" y1="17" x2="17" y2="17"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">Deployment</span>
+        </button>
+        <button class="tool-btn blue" data-category="logistics">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="5" width="10" height="10"/><path d="M12 9h4l2 3v3h-6"/><circle cx="6" cy="16" r="1.5"/><circle cx="15" cy="16" r="1.5"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">Logistics</span>
+        </button>
+        <button class="tool-btn blue" data-category="clone">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="2" width="11" height="11" rx="1"/><path d="M3 7v9a1 1 0 001 1h9"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">Clone</span>
+        </button>
+        <button class="tool-btn blue" data-category="planning">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="2" width="14" height="16" rx="1"/><line x1="7" y1="2" x2="7" y2="5"/><line x1="13" y1="2" x2="13" y2="5"/>
+              <line x1="3" y1="8" x2="17" y2="8"/><line x1="7" y1="8" x2="7" y2="18"/><line x1="12" y1="8" x2="12" y2="18"/><line x1="3" y1="13" x2="17" y2="13"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">Planning</span>
+        </button>
+      </div>
+
+      <!-- Group 2: Red placeholders -->
+      <div class="toolbar-group">
+        <button class="tool-btn red" data-category="red_1">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="14" height="14" rx="2"/><line x1="8" y1="8" x2="12" y2="12"/><line x1="12" y1="8" x2="8" y2="12"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">---</span>
+        </button>
+        <button class="tool-btn red" data-category="red_2">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="14" height="14" rx="2"/><line x1="8" y1="8" x2="12" y2="12"/><line x1="12" y1="8" x2="8" y2="12"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">---</span>
+        </button>
+        <button class="tool-btn red" data-category="red_3">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="14" height="14" rx="2"/><line x1="8" y1="8" x2="12" y2="12"/><line x1="12" y1="8" x2="8" y2="12"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">---</span>
+        </button>
+        <button class="tool-btn red" data-category="red_4">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="14" height="14" rx="2"/><line x1="8" y1="8" x2="12" y2="12"/><line x1="12" y1="8" x2="8" y2="12"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">---</span>
+        </button>
+      </div>
+
+      <!-- Group 3: Phone -->
+      <div class="toolbar-group">
+        <button class="tool-btn folder" data-category="reports">
+          <div class="tool-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="3"/><line x1="12" y1="18" x2="12" y2="18.01"/>
+            </svg>
+          </div>
+          <span class="tool-btn-label">Phone</span>
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════ WORKER INFO PANEL ═══════════════ -->
+  <div id="workerPanel" class="worker-panel hidden">
+    <div class="wp-header">
+      <span class="wp-dot"></span>
+      <span class="wp-name">Agent-01</span>
+      <span class="wp-type">General</span>
+      <button class="wp-close">&times;</button>
+    </div>
+    <div class="wp-body">
+      <div class="wp-stat"><label>State</label><span id="wpState">Idle</span></div>
+      <div class="wp-stat"><label>Room</label><span id="wpRoom">&mdash;</span></div>
+      <div class="wp-stat"><label>Task</label><span id="wpTask">None</span></div>
+    </div>
+    <div class="wp-actions">
+      <button id="wpAssignBtn" class="wp-btn">Assign Task</button>
+      <button id="wpDismissBtn" class="wp-btn red">Dismiss</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ PIPELINE / NODE EDITOR OVERLAY ═══════════════ -->
+  <div id="pipelineOverlay" class="pipeline-overlay hidden">
+    <div class="pipeline-editor">
+      <div class="pe-header">
+        <span class="pe-title">Desk Pipeline</span>
+        <button class="pe-close">&times;</button>
+      </div>
+      <div class="pe-body">
+        <div class="pe-palette">
+          <div class="pe-palette-header">Nodes</div>
+          <div class="pe-palette-list"></div>
+        </div>
+        <div class="pe-canvas-wrap">
+          <svg class="pe-connections"></svg>
+          <div class="pe-canvas"></div>
+        </div>
+        <div class="pe-config hidden">
+          <div class="pe-config-header">Node Config</div>
+          <div class="pe-config-body"></div>
+        </div>
+      </div>
+      <div class="pe-results hidden">
+        <div class="pe-results-header">
+          <span>Results</span>
+          <button class="pe-results-close">&times;</button>
+        </div>
+        <div class="pe-results-body"></div>
+      </div>
+      <div class="pe-footer">
+        <button class="pe-run-btn">&#9654; Run Pipeline</button>
+        <button class="pe-save-btn">Save &amp; Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ ROOM PIPELINE CONFIG ═══════════════ -->
+  <div id="roomConfigOverlay" class="room-config-overlay hidden">
+    <div class="room-config-panel">
+      <div class="rc-header">
+        <span class="rc-title">Room Config</span>
+        <div class="rc-tabs">
+          <button class="rc-tab active" data-tab="staff">Staff</button>
+          <button class="rc-tab" data-tab="pipeline">Pipeline</button>
+        </div>
+        <button class="rc-close">&times;</button>
+      </div>
+      <div class="rc-body">
+        <div class="rc-info"></div>
+        <!-- Staff tab -->
+        <div class="rc-tab-content" data-tab="staff">
+          <div class="rc-staff-grid"></div>
+          <div class="rc-section-label rc-assigned-label">Assigned Workers</div>
+          <div class="rc-assigned-list"></div>
+        </div>
+        <!-- Pipeline tab -->
+        <div class="rc-tab-content hidden" data-tab="pipeline">
+          <div class="rc-desk-list"></div>
+        </div>
+      </div>
+      <div class="rc-footer">
+        <button class="rc-run-btn">&#9654; Run All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ REPORTS PHONE ═══════════════ -->
+  <div id="reportsOverlay" class="reports-overlay hidden">
+    <div class="reports-panel">
+      <!-- Phone hardware -->
+      <div class="rp-notch"></div>
+      <div class="rp-screen">
+        <!-- iOS-style status bar -->
+        <div class="rp-statusbar">
+          <span class="rp-statusbar-time"></span>
+          <span class="rp-statusbar-icons">
+            <!-- Signal bars -->
+            <svg width="14" height="11" viewBox="0 0 20 14" fill="currentColor">
+              <rect x="0" y="10" width="3.5" height="4" rx="0.7"/>
+              <rect x="5" y="7" width="3.5" height="7" rx="0.7"/>
+              <rect x="10" y="3.5" width="3.5" height="10.5" rx="0.7"/>
+              <rect x="15" y="0" width="3.5" height="14" rx="0.7"/>
+            </svg>
+            <!-- WiFi -->
+            <svg width="13" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.24 4.24 0 00-6 0zm-4-4l2 2a7.07 7.07 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+            <!-- Battery -->
+            <svg width="22" height="11" viewBox="0 0 29 13" fill="none">
+              <rect x="0.5" y="0.5" width="24" height="12" rx="3" stroke="currentColor" stroke-width="1.2"/>
+              <rect x="2.5" y="2.5" width="18" height="8" rx="1.5" fill="currentColor"/>
+              <path d="M26 4.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5" fill="currentColor"/>
+            </svg>
+          </span>
+        </div>
+        <!-- Home screen with wallpaper -->
+        <div class="rp-homescreen">
+          <div class="rp-app-grid">
+            <div class="rp-app" data-app="comms">
+              <div class="rp-app-icon" style="background: linear-gradient(135deg, #dc4e41, #c0392b);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              </div>
+              <span class="rp-app-label">Comms</span>
+              <span class="rp-app-badge hidden" id="rpReviewBadge">0</span>
+            </div>
+            <div class="rp-app" data-app="agents">
+              <div class="rp-app-icon" style="background: linear-gradient(135deg, #5cb85c, #3d8b3d);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              </div>
+              <span class="rp-app-label">Agents</span>
+            </div>
+            <div class="rp-app" data-app="logs">
+              <div class="rp-app-icon" style="background: linear-gradient(135deg, #4a90c4, #2a6ab0);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+              </div>
+              <span class="rp-app-label">Logs</span>
+            </div>
+            <div class="rp-app" data-app="system">
+              <div class="rp-app-icon" style="background: linear-gradient(135deg, #607080, #485868);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.61 3.61 0 018.4 12 3.61 3.61 0 0112 8.4a3.61 3.61 0 013.6 3.6 3.61 3.61 0 01-3.6 3.6z"/></svg>
+              </div>
+              <span class="rp-app-label">Settings</span>
+            </div>
+          </div>
+          <!-- iOS-style dock (quick access) -->
+          <div class="rp-dock">
+            <div class="rp-app" data-app="radio">
+              <div class="rp-app-icon" style="background: linear-gradient(135deg, #e8821a, #c06010);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M20 6H8.3L15.1 3.4 14.5 1.6 3 6H2C.9 6 0 6.9 0 8v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM7 20c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm13-8h-2v-2h-2v2H4V8h16v4zM7 14c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+              </div>
+              <span class="rp-app-label">Radio</span>
+            </div>
+          </div>
+        </div>
+        <!-- App view (hidden by default) -->
+        <div class="rp-appview hidden">
+          <div class="rp-appview-header">
+            <button class="rp-back">&larr;</button>
+            <span class="rp-title">App</span>
+            <button class="rp-clear-btn">Clear</button>
+          </div>
+          <div class="rp-content"></div>
+        </div>
+      </div>
+      <!-- Home bar -->
+      <div class="rp-homebar">
+        <div class="rp-homebar-pill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ CONTEXT MENU ═══════════════ -->
+  <div id="contextMenu" class="context-menu hidden">
+    <div class="context-item" data-action="inspect">Inspect Agent</div>
+    <div class="context-item" data-action="assign">Assign Task</div>
+    <div class="context-item" data-action="logs">View Logs</div>
+    <div class="context-divider"></div>
+    <div class="context-item" data-action="copy">Clone</div>
+    <div class="context-item danger" data-action="demolish">Demolish</div>
+  </div>
+
+  <!-- ═══════════════ TOOLTIP ═══════════════ -->
+  <div id="tooltip" class="tooltip hidden">
+    <div class="tooltip-title"></div>
+    <div class="tooltip-desc"></div>
+    <div class="tooltip-cost"></div>
+  </div>
+
+  <script src="js/textures.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/grid.js"></script>
+  <script src="js/toolbar.js"></script>
+  <script src="js/pipeline.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/renderer.js"></script>
+</body>
+</html>
