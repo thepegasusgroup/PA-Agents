@@ -1,6 +1,6 @@
 {
   "name": "pa-agents",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Prison Architect-style facility management dashboard",
   "main": "main.js",
   "scripts": {
@@ -40,7 +40,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.ico"
