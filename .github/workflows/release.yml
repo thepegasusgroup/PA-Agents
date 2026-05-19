@@ -25,6 +25,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # OAuth client credentials for the bundled Gmail integration. The file
+      # is gitignored, so it has to be reconstituted from a repo secret at
+      # build time. Google's desktop-app OAuth flow treats these as
+      # public-by-design (they ship inside every installer), so embedding
+      # them in the .exe is the intended pattern.
+      - name: Write OAuth credentials
+        shell: bash
+        env:
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+        run: |
+          if [ -z "$GOOGLE_CREDENTIALS_JSON" ]; then
+            echo "::error::GOOGLE_CREDENTIALS_JSON secret is not set — add it under Settings → Secrets and variables → Actions before retrying"
+            exit 1
+          fi
+          printf '%s' "$GOOGLE_CREDENTIALS_JSON" > credentials.json
+          echo "credentials.json written ($(wc -c < credentials.json) bytes)"
+
       - name: Build installer
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
