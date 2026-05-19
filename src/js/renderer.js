@@ -1,37 +1,298 @@
+// Global — main process reads this on close to know which slot to save to
+var _activeSlot = 0;
+var _gameStarted = false;
+
 document.addEventListener('DOMContentLoaded', async () => {
   await Textures.init();
+  initWindowControls();
+  showMainMenu();
+});
 
-  // Try to load autosave
-  let saveData = null;
+// ── Main Menu ──
+
+async function showMainMenu() {
+  _activeSlot = 0;
+  if (_pauseOpen) closePauseMenu();
+  const menu = document.getElementById('mainMenu');
+  menu.classList.remove('hidden');
+  document.body.classList.add('menu-active');
+
+  // Load slot 1 (or default facility) as live background
+  let bgSave = null;
   try {
     if (window.electronAPI && window.electronAPI.save) {
-      const exists = await window.electronAPI.save.autosaveExists();
-      if (exists) {
-        const savePath = await window.electronAPI.save.getAutosavePath();
+      // Try each slot in order — use whichever has data
+      for (let i = 1; i <= 3; i++) {
+        const savePath = await window.electronAPI.save.slotPath(i);
         const result = await window.electronAPI.save.read(savePath);
         if (result.success) {
           const parsed = JSON.parse(result.data);
-          if (parsed && parsed.version) saveData = parsed;
+          if (parsed && parsed.version) { bgSave = parsed; break; }
         }
       }
     }
-  } catch (e) {
-    console.warn('[Load] Failed to load autosave, using default facility:', e);
+  } catch (e) { /* silent — will use default facility */ }
+
+  if (!_gameStarted) {
+    // First launch — init everything with the background save
+    AppState.init(bgSave);
+    Grid.init();
+    Toolbar.init();
+    Pipeline.init();
+    Reports.init();
+    Todo.init();
+    initClockUpdate();
+    initWorkerPanel();
+    initHudUpdater();
+    initAutoSave();
+    initSaveLoadKeys();
+    initPauseMenu();
+    _gameStarted = true;
+  } else {
+    // Returning to menu — reload background save
+    AppState.init(bgSave);
+    Grid.texturePatterns = {};
   }
 
+  // Show the canvas behind the menu
+  document.getElementById('main-area').style.visibility = 'visible';
+
+  // Start auto-follow camera
+  Grid.startAutoFollow();
+
+  await renderSlots();
+}
+
+async function renderSlots() {
+  const slotsEl = document.getElementById('mmSlots');
+  if (!window.electronAPI || !window.electronAPI.save) {
+    slotsEl.innerHTML = '<div style="color:#888;">Save system unavailable</div>';
+    return;
+  }
+
+  const slots = await window.electronAPI.save.listSlots();
+  slotsEl.innerHTML = '';
+
+  for (const s of slots) {
+    const card = document.createElement('div');
+    card.className = 'mm-slot' + (s.exists ? '' : ' empty');
+
+    if (s.exists) {
+      let dateStr = '';
+      try {
+        const d = new Date(s.lastSaved);
+        dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' }) +
+                  ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } catch (e) { dateStr = ''; }
+
+      card.innerHTML = `
+        <button class="mm-slot-delete" title="Delete save">&times;</button>
+        <div class="mm-slot-num">Slot ${s.slot}</div>
+        <div class="mm-slot-title">Facility</div>
+        <div class="mm-slot-stats">
+          <div class="mm-slot-stat">
+            <span class="mm-slot-stat-label">Day</span>
+            <span class="mm-slot-stat-value">${s.day}</span>
+          </div>
+          <div class="mm-slot-stat">
+            <span class="mm-slot-stat-label">Workers</span>
+            <span class="mm-slot-stat-value">${s.workers}</span>
+          </div>
+          <div class="mm-slot-stat">
+            <span class="mm-slot-stat-label">Rooms</span>
+            <span class="mm-slot-stat-value">${s.rooms}</span>
+          </div>
+        </div>
+        <div class="mm-slot-date">${dateStr}</div>
+      `;
+
+      // Delete button
+      card.querySelector('.mm-slot-delete').addEventListener('click', (e) => {
+        e.stopPropagation();
+        showDeleteConfirm(card, s.slot);
+      });
+
+      // Load save
+      card.addEventListener('click', () => loadSlot(s.slot));
+    } else {
+      card.innerHTML = `
+        <div class="mm-slot-num">Slot ${s.slot}</div>
+        <div class="mm-slot-empty-icon">+</div>
+        <div class="mm-slot-empty-text">New Game</div>
+      `;
+      card.addEventListener('click', () => loadSlot(s.slot));
+    }
+
+    slotsEl.appendChild(card);
+  }
+}
+
+function showDeleteConfirm(card, slot) {
+  // Prevent duplicate confirm overlays
+  if (card.querySelector('.mm-confirm')) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'mm-confirm';
+  overlay.innerHTML = `
+    <div class="mm-confirm-text">Delete this save?</div>
+    <div class="mm-confirm-btns">
+      <button class="mm-confirm-btn cancel">Cancel</button>
+      <button class="mm-confirm-btn delete">Delete</button>
+    </div>
+  `;
+
+  overlay.querySelector('.cancel').addEventListener('click', (e) => {
+    e.stopPropagation();
+    overlay.remove();
+  });
+
+  overlay.querySelector('.delete').addEventListener('click', async (e) => {
+    e.stopPropagation();
+    await window.electronAPI.save.deleteSlot(slot);
+    renderSlots();
+  });
+
+  overlay.addEventListener('click', (e) => e.stopPropagation());
+  card.appendChild(overlay);
+}
+
+async function loadSlot(slot) {
+  _activeSlot = slot;
+  let saveData = null;
+
+  try {
+    const savePath = await window.electronAPI.save.slotPath(slot);
+    const result = await window.electronAPI.save.read(savePath);
+    if (result.success) {
+      const parsed = JSON.parse(result.data);
+      if (parsed && parsed.version) saveData = parsed;
+    }
+  } catch (e) {
+    // No save — will start fresh
+  }
+
+  // Stop auto-follow camera
+  Grid.stopAutoFollow();
+
+  // Hide menu, show HUD
+  document.getElementById('mainMenu').classList.add('hidden');
+  document.body.classList.remove('menu-active');
+
+  // Load the selected save (or new game)
   AppState.init(saveData);
-  Grid.init();
-  Toolbar.init();
-  Pipeline.init();
-  Reports.init();
-  Todo.init();
-  initClockUpdate();
-  initWindowControls();
-  initWorkerPanel();
-  initHudUpdater();
-  initAutoSave();
-  initSaveLoadKeys();
-});
+  Grid.texturePatterns = {};
+}
+
+function returnToMenu() {
+  // Save current slot before returning
+  if (_activeSlot >= 1 && _activeSlot <= 3) {
+    (async () => {
+      try {
+        const data = AppState.serialize();
+        const json = JSON.stringify(data);
+        const savePath = await window.electronAPI.save.slotPath(_activeSlot);
+        await window.electronAPI.save.write(savePath, json);
+      } catch (e) {
+        console.warn('[Save] Failed to save before menu:', e);
+      }
+      showMainMenu();
+    })();
+  } else {
+    showMainMenu();
+  }
+}
+
+// ── Pause Menu ──
+
+var _pauseOpen = false;
+
+function togglePauseMenu() {
+  if (_pauseOpen) closePauseMenu();
+  else openPauseMenu();
+}
+
+function openPauseMenu() {
+  if (_activeSlot < 1) return; // Don't open during main menu
+  _pauseOpen = true;
+  document.getElementById('pauseMenu').classList.remove('hidden');
+}
+
+function closePauseMenu() {
+  _pauseOpen = false;
+  document.getElementById('pauseMenu').classList.add('hidden');
+}
+
+function initPauseMenu() {
+  document.getElementById('pauseResume').addEventListener('click', closePauseMenu);
+
+  document.getElementById('pauseSettings').addEventListener('click', () => {
+    closePauseMenu();
+    Reports.open();
+    Reports._openApp('system');
+  });
+
+  document.getElementById('pauseSave').addEventListener('click', async () => {
+    if (_activeSlot < 1) return;
+    try {
+      const data = AppState.serialize();
+      const json = JSON.stringify(data);
+      const savePath = await window.electronAPI.save.slotPath(_activeSlot);
+      await window.electronAPI.save.write(savePath, json);
+      Reports.log('system', 'Saved to slot ' + _activeSlot);
+    } catch (e) {
+      console.warn('[Save] Failed:', e);
+    }
+    closePauseMenu();
+  });
+
+  document.getElementById('pauseLoad').addEventListener('click', async () => {
+    closePauseMenu();
+    // Re-load the current slot from disk
+    try {
+      const savePath = await window.electronAPI.save.slotPath(_activeSlot);
+      const result = await window.electronAPI.save.read(savePath);
+      if (result.success) {
+        const parsed = JSON.parse(result.data);
+        if (parsed && parsed.version) {
+          AppState.init(parsed);
+          Grid.texturePatterns = {};
+          Reports.log('system', 'Loaded slot ' + _activeSlot);
+        }
+      }
+    } catch (e) {
+      console.warn('[Load] Failed:', e);
+    }
+  });
+
+  document.getElementById('pauseQuit').addEventListener('click', () => {
+    closePauseMenu();
+    returnToMenu();
+  });
+
+  // ESC key handler — must run before grid/toolbar ESC handlers
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (_activeSlot < 1) return; // Ignore during main menu
+
+    // If pause menu is open, close it
+    if (_pauseOpen) {
+      e.stopImmediatePropagation();
+      closePauseMenu();
+      return;
+    }
+
+    // If something is selected/active in the game, let existing handlers deal with it
+    if (Grid._cloneMode && Grid._cloneData) return;
+    if (Grid._objMoveMode) return;
+    if (Grid._selectedObjId) return;
+    if (AppState.tools.activeItem) return;
+    if (Reports.isOpen()) return;
+
+    // Nothing active — open pause menu
+    e.stopImmediatePropagation();
+    openPauseMenu();
+  }, true); // 'true' = capture phase, runs before grid/toolbar handlers
+}
 
 // ── Todo Panel (HITL review queue in-game) ──
 const Todo = {
@@ -215,25 +476,22 @@ function initHudUpdater() {
   }, 500);
 }
 
-// ── Auto-save (every 60 seconds) ──
+// ── Auto-save (every 60 seconds, saves to active slot) ──
 function initAutoSave() {
   if (!window.electronAPI || !window.electronAPI.save) return;
 
   const INTERVAL = 60000; // 60 seconds
   setInterval(async () => {
+    if (_activeSlot < 1 || _activeSlot > 3) return;
     try {
       const data = AppState.serialize();
       const json = JSON.stringify(data);
-      const savePath = await window.electronAPI.save.getAutosavePath();
+      const savePath = await window.electronAPI.save.slotPath(_activeSlot);
       await window.electronAPI.save.write(savePath, json);
     } catch (e) {
       console.warn('[AutoSave] Failed:', e);
     }
   }, INTERVAL);
-
-  // Save-on-close is handled by the main process (main.js close event handler).
-  // The main process calls executeJavaScript('AppState.serialize()') and writes
-  // the autosave synchronously before destroying the window.
 }
 
 // ── Manual Save/Load (Ctrl+S / Ctrl+O) ──

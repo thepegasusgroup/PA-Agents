@@ -3,3 +3,19 @@ credentials.json
 dist/
 *.exe
 *.blockmap
+
+# Build/extraction scratch
+*_inspect.webp
+*_test.webp
+*_atlas*.webp
+_tmp_*
+*_new.webp
+*_1x1.webp
+*.webp.tmp
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+
+# Claude Code working state (worktrees, etc.)
+.claude/

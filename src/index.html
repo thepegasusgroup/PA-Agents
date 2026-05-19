@@ -25,12 +25,6 @@
     <!-- Utility Underground View Indicator -->
     <div class="utility-indicator" id="utilityIndicator">⚡ Underground View</div>
 
-    <!-- Crate Tooltip (delivery system) -->
-    <div id="crateTooltip" class="crate-tooltip hidden">
-      <span class="ct-label">Contains:</span>
-      <span class="ct-item"></span>
-    </div>
-
     <!-- ═══════════════ TODO / REPORT (top-left) ═══════════════ -->
     <div class="todo-container">
       <div class="todo-top-row">
@@ -119,7 +113,7 @@
       </div>
     </div>
 
-    <!-- ═══════════════ CLOCK & SPEED (top-right) ═══════════════ -->
+    <!-- ═══════════════ CLOCK (top-right) ═══════════════ -->
     <div class="clock-container">
       <div class="clock-display" id="clockTime">07:00</div>
       <div class="clock-period" id="clockPeriod">Morning</div>
@@ -372,6 +366,10 @@
     </div>
   </div>
 
+  <!-- (The custom-agent editor used to live here as a modal — it's now a
+       phone-native app at js/reports/app_workshop.js, opened from the
+       Workshop icon on the phone home screen.) -->
+
   <!-- ═══════════════ REPORTS PHONE ═══════════════ -->
   <div id="reportsOverlay" class="reports-overlay hidden">
     <div class="reports-panel">
@@ -399,47 +397,95 @@
             </svg>
           </span>
         </div>
-        <!-- Home screen with wallpaper -->
+        <!-- Home screen — 4×3 app grid + 4-slot dock. Productivity apps live
+             on the grid; the dock holds the four most-frequently-accessed:
+             Mail, Contacts, Camera, Radio. -->
         <div class="rp-homescreen">
           <div class="rp-app-grid">
-            <div class="rp-app" data-app="comms">
-              <div class="rp-app-icon" style="background: linear-gradient(135deg, #dc4e41, #c0392b);">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-              </div>
-              <span class="rp-app-label">Comms</span>
-              <span class="rp-app-badge hidden" id="rpReviewBadge">0</span>
+            <!-- Row 1: time & planning -->
+            <div class="rp-app" data-app="calendar">
+              <img class="rp-app-icon" src="assets/icons/apps/calendar.svg" alt="">
+              <span class="rp-app-label">Calendar</span>
             </div>
-            <div class="rp-app" data-app="agents">
-              <div class="rp-app-icon" style="background: linear-gradient(135deg, #5cb85c, #3d8b3d);">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            <div class="rp-app" data-app="clock">
+              <img class="rp-app-icon" src="assets/icons/apps/clock.svg" alt="">
+              <span class="rp-app-label">Clock</span>
+            </div>
+            <div class="rp-app" data-app="reminders">
+              <img class="rp-app-icon" src="assets/icons/apps/reminders.svg" alt="">
+              <span class="rp-app-label">Reminders</span>
+            </div>
+            <div class="rp-app" data-app="notes">
+              <img class="rp-app-icon" src="assets/icons/apps/notes.svg" alt="">
+              <span class="rp-app-label">Notes</span>
+            </div>
+
+            <!-- Row 2: media & utilities -->
+            <div class="rp-app" data-app="photos">
+              <img class="rp-app-icon" src="assets/icons/apps/photos.svg" alt="">
+              <span class="rp-app-label">Photos</span>
+            </div>
+            <div class="rp-app" data-app="weather">
+              <img class="rp-app-icon" src="assets/icons/apps/weather.svg" alt="">
+              <span class="rp-app-label">Weather</span>
+            </div>
+            <div class="rp-app" data-app="calculator">
+              <img class="rp-app-icon" src="assets/icons/apps/calculator.svg" alt="">
+              <span class="rp-app-label">Calculator</span>
+            </div>
+            <div class="rp-app" data-app="maps">
+              <div class="rp-app-icon" style="background: linear-gradient(180deg, #b5e2a3 0%, #6bbf85 60%, #4a9b9b 100%);">
+                <span class="rp-emoji">📍</span>
               </div>
-              <span class="rp-app-label">Agents</span>
+              <span class="rp-app-label">Maps</span>
+            </div>
+
+            <!-- Row 3: info & system -->
+            <div class="rp-app" data-app="news">
+              <div class="rp-app-icon" style="background: linear-gradient(135deg, #ff3b30, #c0392b);">
+                <span class="rp-emoji">📰</span>
+              </div>
+              <span class="rp-app-label">News</span>
+            </div>
+            <div class="rp-app" data-app="workshop">
+              <div class="rp-app-icon rp-app-icon-workshop" style="background: linear-gradient(135deg, #5b3aa0 0%, #2c5282 100%);">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="5" y="8" width="14" height="11" rx="2"/>
+                  <line x1="12" y1="3" x2="12" y2="8"/>
+                  <circle cx="12" cy="3.2" r="0.9"/>
+                  <circle cx="9" cy="13" r="1"/>
+                  <circle cx="15" cy="13" r="1"/>
+                  <line x1="3" y1="15" x2="5" y2="15"/>
+                  <line x1="19" y1="15" x2="21" y2="15"/>
+                </svg>
+              </div>
+              <span class="rp-app-label">Workshop</span>
             </div>
             <div class="rp-app" data-app="logs">
-              <div class="rp-app-icon" style="background: linear-gradient(135deg, #4a90c4, #2a6ab0);">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-              </div>
+              <img class="rp-app-icon" src="assets/icons/apps/files.svg" alt="">
               <span class="rp-app-label">Logs</span>
             </div>
             <div class="rp-app" data-app="system">
-              <div class="rp-app-icon" style="background: linear-gradient(135deg, #607080, #485868);">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.61 3.61 0 018.4 12 3.61 3.61 0 0112 8.4a3.61 3.61 0 013.6 3.6 3.61 3.61 0 01-3.6 3.6z"/></svg>
-              </div>
+              <img class="rp-app-icon" src="assets/icons/apps/settings.svg" alt="">
               <span class="rp-app-label">Settings</span>
             </div>
-            <div class="rp-app" data-app="connections">
-              <div class="rp-app-icon" style="background: linear-gradient(135deg, #8e44ad, #6c3483);">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm-3-4h8v2H8z"/></svg>
-              </div>
-              <span class="rp-app-label">Connections</span>
-            </div>
           </div>
-          <!-- iOS-style dock (quick access) -->
+          <!-- iOS-style dock — 4 essentials -->
           <div class="rp-dock">
+            <div class="rp-app" data-app="comms">
+              <img class="rp-app-icon" src="assets/icons/apps/mail.svg" alt="">
+              <span class="rp-app-label">Mail</span>
+            </div>
+            <div class="rp-app" data-app="contacts">
+              <img class="rp-app-icon" src="assets/icons/apps/contacts.svg" alt="">
+              <span class="rp-app-label">Contacts</span>
+            </div>
+            <div class="rp-app" data-app="camera">
+              <img class="rp-app-icon" src="assets/icons/apps/camera.svg" alt="">
+              <span class="rp-app-label">Camera</span>
+            </div>
             <div class="rp-app" data-app="radio">
-              <div class="rp-app-icon" style="background: linear-gradient(135deg, #e8821a, #c06010);">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M20 6H8.3L15.1 3.4 14.5 1.6 3 6H2C.9 6 0 6.9 0 8v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM7 20c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm13-8h-2v-2h-2v2H4V8h16v4zM7 14c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
-              </div>
+              <img class="rp-app-icon" src="assets/icons/apps/apple-music.svg" alt="">
               <span class="rp-app-label">Radio</span>
             </div>
           </div>
@@ -471,6 +517,16 @@
     <div class="context-item danger" data-action="demolish">Demolish</div>
   </div>
 
+  <!-- ═══════════════ OBJECT ACTIONS MENU ═══════════════ -->
+  <div id="objectActionsMenu" class="context-menu hidden">
+    <div class="context-menu-title">Object</div>
+    <div class="context-item" data-action="configure">⚙ Configure</div>
+    <div class="context-item" data-action="move">↔ Move</div>
+    <div class="context-divider"></div>
+    <div class="context-item danger" data-action="remove">✕ Remove</div>
+    <div class="context-item" data-action="close">Close</div>
+  </div>
+
   <!-- ═══════════════ TOOLTIP ═══════════════ -->
   <div id="tooltip" class="tooltip hidden">
     <div class="tooltip-title"></div>
@@ -478,12 +534,97 @@
     <div class="tooltip-cost"></div>
   </div>
 
+  <!-- ═══════════════ DEBUG OVERLAY (object hover info) ═══════════════ -->
+  <div id="debugOverlay" class="debug-overlay hidden"></div>
+
+  <!-- ═══════════════ PAUSE MENU ═══════════════ -->
+  <div id="pauseMenu" class="pause-menu hidden">
+    <div class="pause-bg"></div>
+    <div class="pause-content">
+      <div class="pause-title">PAUSED</div>
+      <div class="pause-buttons">
+        <button class="pause-btn" id="pauseResume">Resume</button>
+        <button class="pause-btn" id="pauseSettings">Settings</button>
+        <button class="pause-btn" id="pauseSave">Save Game</button>
+        <button class="pause-btn" id="pauseLoad">Load Game</button>
+        <button class="pause-btn quit" id="pauseQuit">Save &amp; Quit to Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MAIN MENU ═══════════════ -->
+  <div id="mainMenu" class="main-menu">
+    <div class="mm-bg"></div>
+    <div class="mm-content">
+      <div class="mm-header">
+        <div class="mm-logo">PEGASUS AGENTS</div>
+        <div class="mm-subtitle">AI Workforce Management</div>
+      </div>
+      <div class="mm-slots" id="mmSlots"></div>
+      <div class="mm-footer">v0.1.5</div>
+    </div>
+  </div>
+
   <script src="js/textures.js"></script>
-  <script src="js/state.js"></script>
+  <!-- Static data tables (must load before state/* + grid.js, in dependency order) -->
+  <script src="js/defs/cells.js"></script>
+  <script src="js/defs/workers.js"></script>
+  <script src="js/defs/utilities.js"></script>
+  <script src="js/defs/objects.js"></script>
+  <script src="js/defs/rooms.js"></script>
+  <script src="js/defs/toolbar.js"></script>
+  <script src="js/defs/sprite_overrides.js"></script>
+  <!-- AppState — core declares the singleton; siblings attach methods to it -->
+  <script src="js/state/core.js"></script>
+  <script src="js/state/sprite_overrides.js"></script>
+  <script src="js/state/migrate.js"></script>
+  <script src="js/state/serialize.js"></script>
+  <script src="js/state/entities.js"></script>
   <script src="js/grid.js"></script>
+  <!-- Grid feature files attach methods to the Grid singleton -->
+  <script src="js/grid/camera.js"></script>
+  <script src="js/grid/input_keyboard.js"></script>
+  <script src="js/grid/input_mouse.js"></script>
+  <script src="js/grid/path.js"></script>
+  <script src="js/grid/place.js"></script>
+  <script src="js/grid/update.js"></script>
+  <script src="js/grid/workers.js"></script>
+  <script src="js/grid/select.js"></script>
+  <script src="js/grid/clone.js"></script>
+  <script src="js/grid/debug.js"></script>
+  <script src="js/grid/render.js"></script>
+  <script src="js/grid/render_utilities.js"></script>
+  <script src="js/grid/render_environment.js"></script>
+  <script src="js/grid/render_workers.js"></script>
+  <script src="js/grid/render_overlays.js"></script>
   <script src="js/toolbar.js"></script>
-  <script src="js/pipeline.js"></script>
-  <script src="js/reports.js"></script>
+  <!-- Pipeline — top-level helpers + core singleton + feature files attach methods -->
+  <!-- Central icon library — used by pipeline node types + phone apps -->
+  <script src="js/icons.js"></script>
+  <script src="js/pipeline/email_render.js"></script>
+  <script src="js/pipeline/node_types.js"></script>
+  <script src="js/pipeline/core.js"></script>
+  <script src="js/pipeline/editor.js"></script>
+  <script src="js/pipeline/room_config.js"></script>
+  <script src="js/pipeline/runner.js"></script>
+  <script src="js/pipeline/hitl.js"></script>
+  <!-- Reports phone UI — core declares the singleton; app_*.js attach methods -->
+  <script src="js/reports/core.js"></script>
+  <script src="js/reports/app_comms.js"></script>
+  <script src="js/reports/app_contacts.js"></script>
+  <script src="js/reports/app_logs.js"></script>
+  <script src="js/reports/app_system.js"></script>
+  <script src="js/reports/app_radio.js"></script>
+  <script src="js/reports/app_clock.js"></script>
+  <script src="js/reports/app_calculator.js"></script>
+  <script src="js/reports/app_calendar.js"></script>
+  <script src="js/reports/app_weather.js"></script>
+  <script src="js/reports/app_notes.js"></script>
+  <script src="js/reports/app_reminders.js"></script>
+  <script src="js/reports/app_camera.js"></script>
+  <script src="js/reports/app_photos.js"></script>
+  <script src="js/reports/app_workshop.js"></script>
+  <script src="js/reports/app_dummy.js"></script>
   <script src="js/renderer.js"></script>
 </body>
 </html>

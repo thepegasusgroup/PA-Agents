@@ -9,6 +9,9 @@ const Toolbar = {
       const btn = e.target.closest('.tool-btn');
       if (!btn) return;
       this.selectCategory(btn.dataset.category);
+      // Blur the button so it doesn't keep keyboard focus — otherwise pressing
+      // Space afterward would re-trigger a click and toggle the menu closed.
+      btn.blur();
     });
 
     this.subItems.addEventListener('click', (e) => {
@@ -16,6 +19,7 @@ const Toolbar = {
       if (tab) {
         if (tab.dataset.tab === 'more') return;
         this.switchPanelTab(tab.dataset.tab);
+        if (tab.blur) tab.blur();
         return;
       }
 
@@ -26,12 +30,14 @@ const Toolbar = {
         } else if (fpItem.dataset.itemId) {
           this.selectPanelItem(fpItem.dataset.itemId);
         }
+        if (fpItem.blur) fpItem.blur();
         return;
       }
 
       const item = e.target.closest('.sub-item');
       if (!item) return;
       this.selectItem(item.dataset.itemId);
+      if (item.blur) item.blur();
     });
 
     document.addEventListener('keydown', (e) => {
@@ -503,6 +509,7 @@ const Toolbar = {
     grid.className = 'fp-content fp-grid';
     grid.dataset.objGrid = 'true';
 
+    // Built-in items from ToolbarData.staff
     const allItems = data.categories.flatMap(c => c.items);
     for (const item of allItems) {
       const cell = document.createElement('div');
@@ -516,9 +523,45 @@ const Toolbar = {
         '<div class="fp-grid-label">' + label + '</div>';
       grid.appendChild(cell);
     }
+
+    // ── Custom worker types — rendered like built-ins so click handling
+    //    routes through the same selectPanelItem → selectItem path. ──
+    const customs = AppState.customWorkerTypes || {};
+    for (const [id, def] of Object.entries(customs)) {
+      const cell = document.createElement('div');
+      cell.className = 'fp-grid-item fp-grid-custom-agent';
+      cell.dataset.itemId = id;
+      cell.dataset.customAgentId = id;
+      cell.dataset.objCategory = 'AI Agents';
+      cell.dataset.searchName = (def.name || '').toLowerCase() + ' custom';
+      const spriteUrl = iconBase + 'workers/' + def.sprite + '/front.webp';
+      const badgeGlyph = (typeof Icons !== 'undefined' && Icons[def.icon]) || (typeof Icons !== 'undefined' ? Icons.bot : '');
+      cell.innerHTML =
+        '<div class="fp-grid-icon" style="position:relative;">' +
+          '<img src="' + spriteUrl + '" draggable="false">' +
+          '<span class="fp-custom-badge" style="background:' + def.color + ';">' + badgeGlyph + '</span>' +
+        '</div>' +
+        '<div class="fp-grid-label">' + this._esc(def.name) + '</div>';
+      grid.appendChild(cell);
+    }
+
     panel.appendChild(grid);
 
     this.subItems.appendChild(panel);
+
+    // Right-click any custom agent tile to jump straight to its Workshop entry.
+    grid.addEventListener('contextmenu', (e) => {
+      const customTile = e.target.closest('[data-custom-agent-id]');
+      if (customTile && typeof Reports !== 'undefined' && Reports._workshopOpen) {
+        e.preventDefault();
+        e.stopPropagation();
+        Reports.open();
+        Reports._activeApp = 'workshop';
+        Reports.homescreen.classList.add('hidden');
+        Reports.appview.classList.remove('hidden');
+        Reports._workshopOpen(customTile.dataset.customAgentId);
+      }
+    });
 
     // Wire up dropdown
     select.addEventListener('change', () => {
@@ -627,6 +670,12 @@ const Toolbar = {
     if (!item && itemId === 'demolish_utility') {
       item = { id: 'demolish_utility', name: 'Remove\nUtility', cost: 0, utilityType: 0 };
     }
+    // Custom worker types live in AppState, not in ToolbarData. Synthesise the
+    // item the rest of the pipeline expects (workerType wired to the custom id).
+    if (!item && AppState.customWorkerTypes && AppState.customWorkerTypes[itemId]) {
+      const def = AppState.customWorkerTypes[itemId];
+      item = { id: itemId, name: def.name, cost: 0, workerType: itemId };
+    }
     if (!item) return;
 
     if (s.tools.activeItem && s.tools.activeItem.id === itemId) {
@@ -724,6 +773,12 @@ const Toolbar = {
 
   hidePlacementInfo() {
     this.placementInfo.classList.add('hidden');
+  },
+
+  _esc(str) {
+    const d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
   },
 
   clearSelection() {
